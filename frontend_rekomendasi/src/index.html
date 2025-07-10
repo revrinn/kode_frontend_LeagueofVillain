@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Rekomendasi Metode Belajar - Diagnostic</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #ffb3c1;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        
+        .diagnostic-panel {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .diagnostic-panel h3 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-online { background: #4caf50; }
+        .status-offline { background: #f44336; }
+        .status-testing { background: #ff9800; }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        select:focus, input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex: 1;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-test {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        }
+        
+        .result-panel {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            display: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .result-panel h2 {
+            margin-top: 0;
+            font-size: 2em;
+        }
+        
+        .recommendation {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .error-panel {
+            background: linear-gradient(135deg, #ff4757, #ff3742);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .log-panel {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .log-info { background: rgba(52, 152, 219, 0.2); }
+        .log-error { background: rgba(231, 76, 60, 0.2); }
+        .log-success { background: rgba(46, 204, 113, 0.2); }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Sistem Rekomendasi Metode Belajar</h1>
+        <p class="subtitle">Temukan metode belajar yang tepat untuk Anda dengan teknologi AI</p>
+        
+        <div class="diagnostic-panel">
+            <h3>🔧 Status Sistem</h3>
+            <div id="statusIndicator">
+                <span class="status-indicator status-testing"></span>
+                <span id="statusText">Sedang mengecek koneksi...</span>
+            </div>
+            <div style="margin-top: 10px;">
+                <strong>Backend URL:</strong> <span id="backendUrl">http://localhost:8000</span>
+            </div>
+        </div>
+        
+        <form id="recommendationForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="gender">👤 Jenis Kelamin</label>
+                    <select id="gender" name="gender" required>
+                        <option value="">Pilih Jenis Kelamin</option>
+                        <option value="Male">Laki-laki</option>
+                        <option value="Female">Perempuan</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="grade">📚 Kelas</label>
+                    <select id="grade" name="grade" required>
+                        <option value="">Pilih Kelas</option>
+                        <option value="7">Kelas 7</option>
+                        <option value="8">Kelas 8</option>
+                        <option value="9">Kelas 9</option>
+                        <option value="10">Kelas 10</option>
+                        <option value="11">Kelas 11</option>
+                        <option value="12">Kelas 12</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tech_savvy">💻 Kemampuan Teknologi</label>
+                    <select id="tech_savvy" name="tech_savvy" required>
+                        <option value="">Pilih Kemampuan</option>
+                        <option value="Low">Pemula</option>
+                        <option value="Medium">Menengah</option>
+                        <option value="High">Mahir</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subject">📖 Mata Pelajaran</label>
+                    <select id="subject" name="subject" required>
+                        <option value="">Pilih Mata Pelajaran</option>
+                        <option value="Mathematics">Matematika</option>
+                        <option value="Science">Sains</option>
+                        <option value="English">Bahasa Inggris</option>
+                        <option value="History">Sejarah</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="material_type">🎬 Tipe Materi yang Disukai</label>
+                    <select id="material_type" name="material_type" required>
+                        <option value="">Pilih Tipe Materi</option>
+                        <option value="Video Lesson">Video Pembelajaran</option>
+                        <option value="Interactive Exercise">Latihan Interaktif</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="student_feedback">💬 Feedback Terhadap Materi</label>
+                    <select id="student_feedback" name="student_feedback" required>
+                        <option value="">Pilih Feedback</option>
+                        <option value="Positive">Positif</option>
+                        <option value="Neutral">Netral</option>
+                        <option value="Negative">Negatif</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="achievement_status">🏆 Prestasi Terakhir</label>
+                    <select id="achievement_status" name="achievement_status" required>
+                        <option value="">Pilih Status Prestasi</option>
+                        <option value="Pass">Lulus/Memenuhi Target</option>
+                        <option value="Fail">Tidak Lulus/Belum Memenuhi</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="learning_speed">⚡ Kecepatan Belajar</label>
+                    <select id="learning_speed" name="learning_speed" required>
+                        <option value="">Pilih Kecepatan Belajar</option>
+                        <option value="Fast">Cepat</option>
+                        <option value="Moderate">Sedang</option>
+                        <option value="Slow">Lambat</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" id="testConnection" class="btn-test">🔍 Test Koneksi</button>
+                <button type="submit" id="submitBtn">🚀 Dapatkan Rekomendasi</button>
+            </div>
+        </form>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner"></div>
+            <p>Memproses data Anda...</p>
+        </div>
+        
+        <div class="error-panel" id="errorContainer">
+            <h3>❌ Error Terdeteksi</h3>
+            <p id="errorMessage"></p>
+            <details style="margin-top: 10px;">
+                <summary>Detail Error</summary>
+                <pre id="errorDetails"></pre>
+            </details>
+        </div>
+        
+        <div class="result-panel" id="resultContainer">
+            <h2>✨ Rekomendasi Metode Belajar</h2>
+            <div class="recommendation" id="recommendationResult"></div>
+            <p>Metode ini dipilih berdasarkan analisis profil belajar Anda</p>
+        </div>
+        
+        <div class="log-panel" id="logPanel">
+            <h4>📝 Log Sistem</h4>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        class LearningRecommendationSystem {
+            constructor() {
+                this.backendUrl = 'http://localhost:8000';
+                this.isBackendAvailable = false;
+                this.logEntries = [];
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.checkBackendStatus();
+                this.log('Sistem dimulai', 'info');
+            }
+            
+            setupEventListeners() {
+                document.getElementById('testConnection').addEventListener('click', () => this.testConnection());
+                document.getElementById('recommendationForm').addEventListener('submit', (e) => this.handleSubmit(e));
+            }
+            
+            async checkBackendStatus() {
+                try {
+                    const response = await fetch(`${this.backendUrl}/`, {
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+                    
+                    if (response.ok) {
+                        this.isBackendAvailable = true;
+                        this.updateStatus('Backend tersedia', 'online');
+                        this.log('Backend terhubung dengan sukses', 'success');
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    this.isBackendAvailable = false;
+                    this.updateStatus('Backend tidak tersedia - Mode demo aktif', 'offline');
+                    this.log(`Error koneksi backend: ${error.message}`, 'error');
+                }
+            }
+            
+            async testConnection() {
+                this.log('Menguji koneksi backend...', 'info');
+                await this.checkBackendStatus();
+                
+                if (!this.isBackendAvailable) {
+                    this.showError('Koneksi Gagal', 'Backend tidak dapat diakses. Kemungkinan penyebab:\n1. Server FastAPI belum dijalankan\n2. CORS policy memblokir request\n3. Port 8000 tidak tersedia\n4. Firewall memblokir koneksi\n\nMenjalankan mode demo...');
+                }
+            }
+            
+            async handleSubmit(e) {
+                e.preventDefault();
+                this.hideMessages();
+                this.showLoading();
+                
+                try {
+                    const formData = this.getFormData();
+                    this.log('Memproses data form...', 'info');
+                    
+                    let recommendation;
+                    if (this.isBackendAvailable) {
+                        recommendation = await this.getRecommendationFromBackend(formData);
+                    } else {
+                        recommendation = this.getRecommendationFromDemo(formData);
+                    }
+                    
+                    this.showResult(recommendation);
+                    this.log('Rekomendasi berhasil dihasilkan', 'success');
+                } catch (error) {
+                    this.showError('Error Processing', error.message);
+                    this.log(`Error: ${error.message}`, 'error');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            getFormData() {
+                const form = document.getElementById('recommendationForm');
+                return {
+                    gender: form.gender.value,
+                    grade: parseInt(form.grade.value),
+                    tech_savvy: form.tech_savvy.value,
+                    subject: form.subject.value,
+                    material_type: form.material_type.value,
+                    student_feedback: form.student_feedback.value,
+                    achievement_status: form.achievement_status.value,
+                    learning_speed: form.learning_speed.value
+                };
+            }
+            
+            async getRecommendationFromBackend(formData) {
+                try {
+                    const response = await fetch(`${this.backendUrl}/recommend`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData),
+                        mode: 'cors'
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    return data.recommended_method;
+                } catch (error) {
+                    throw new Error(`Backend error: ${error.message}`);
+                }
+            }
+            
+            getRecommendationFromDemo(formData) {
+                // Algoritma rekomendasi sederhana untuk demo
+                const rules = [
+                    {
+                        conditions: { tech_savvy: 'High', material_type: 'Interactive Exercise' },
+                        method: 'Interactive Learning dengan Gamifikasi'
+                    },
+                    {
+                        conditions: { learning_speed: 'Fast', achievement_status: 'Pass' },
+                        method: 'Accelerated Learning dengan Kustomisasi'
+                    },
+                    {
+                        conditions: { material_type: 'Video Lesson', learning_speed: 'Slow' },
+                        method: 'Video-Based Learning dengan Repetisi'
+                    },
+                    {
+                        conditions: { student_feedback: 'Positive', tech_savvy: 'Medium' },
+                        method: 'Blended Learning dengan Teknologi'
+                    },
+                    {
+                        conditions: { achievement_status: 'Fail', learning_speed: 'Slow' },
+                        method: 'Remedial Learning dengan Dukungan Tambahan'
+                    }
+                ];
+                
+                // Cari rule yang cocok
+                for (const rule of rules) {
+                    let match = true;
+                    for (const [key, value] of Object.entries(rule.conditions)) {
+                        if (formData[key] !== value) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) return rule.method;
+                }
+                
+                // Default fallback
+                const defaultMethods = [
+                    'Blended Learning',
+                    'Visual Learning',
+                    'Collaborative Learning',
+                    'Self-Paced Learning',
+                    'Project-Based Learning'
+                ];
+                
+                return defaultMethods[Math.floor(Math.random() * defaultMethods.length)];
+            }
+            
+            updateStatus(message, status) {
+                const statusIndicator = document.querySelector('.status-indicator');
+                const statusText = document.getElementById('statusText');
+                
+                statusIndicator.className = `status-indicator status-${status}`;
+                statusText.textContent = message;
+            }
+            
+            showLoading() {
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('submitBtn').disabled = true;
+            }
+            
+            hideLoading() {
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+            }
+            
+            showResult(method) {
+                document.getElementById('recommendationResult').textContent = method;
+                document.getElementById('resultContainer').style.display = 'block';
+            }
+            
+            showError(title, message) {
+                document.getElementById('errorMessage').textContent = message;
+                document.getElementById('errorContainer').style.display = 'block';
+            }
+            
+            hideMessages() {
+                document.getElementById('errorContainer').style.display = 'none';
+                document.getElementById('resultContainer').style.display = 'none';
+            }
+            
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}`;
+                
+                this.logEntries.push({ message: logEntry, type });
+                this.updateLogDisplay();
+            }
+            
+            updateLogDisplay() {
+                const logContent = document.getElementById('logContent');
+                logContent.innerHTML = this.logEntries.map(entry => 
+                    `<div class="log-entry log-${entry.type}">${entry.message}</div>`
+                ).join('');
+                logContent.scrollTop = logContent.scrollHeight;
+            }
+        }
+        
+        // Initialize the system
+        document.addEventListener('DOMContentLoaded', () => {
+            new LearningRecommendationSystem();
+        });
+    </script>
+</body>
+</html>
